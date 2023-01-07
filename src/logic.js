@@ -13,52 +13,86 @@ export const generate = ()=>{
 
 export const drawTiles = (mountain)=>{
     const canDraw = []
+    const finalTiles = []
     for (let i = 0; i < mountain.length; i++) {
         if (mountain[i]===4){
             continue
         }
         const testCase = [...mountain]
         testCase[i]+=1
-        if (niconico(testCase)||win(testCase)) {
-            canDraw.push(i)
+        {
+            const [ok, fTiles] =niconico(testCase)
+            if (ok){
+                canDraw.push(i)
+                finalTiles.push(fTiles)
+                continue
+            }
+
+        }
+        {
+            const [ok, fTiles] =win(testCase)
+            if (ok) {
+                canDraw.push(i)
+                finalTiles.push(fTiles)
+                continue
+            }
         }
     }
-    return canDraw
+    return [canDraw,finalTiles]
 }
 
 
-const win = (mountain, at=0) => {
-    if (at>=9)return pair(mountain)
+const win = (mountain, at=0, tiles=[]) => {
+    if (at>=9)return pair(mountain,tiles)
     const count = mountain[at]
-    if (count===0) return win(mountain,at+1)
-    const tri = triplet(mountain,at)
-    const seq = sequence(mountain,at)
-    return (tri&&win(tri,at))||(seq&&win(seq,at))||win(mountain,at+1)
+    if (count===0) return win(mountain,at+1,tiles)
+
+    {
+        const [tri, triTiles] = triplet(mountain, at, tiles)
+        if (tri){
+            return win(tri,at,triTiles)
+        }
+    }
+    {
+        const [seq, seqTiles] = sequence(mountain,at,tiles)
+        if (seq){
+            return win(seq,at,seqTiles)
+        }
+    }
+    return win(mountain,at+1, tiles)
 }
 
 const niconico = (mountain)=>{
-    return mountain.filter(item=>item===2).length===7
+    return [mountain.filter(item=>item===2).length===7,mountain.map((count,index)=>{
+        if (count===0)return []
+        return [index,index]
+    }).filter(item=>item.length!==0)]
+
 }
 
-const triplet = (mountain, at) => {
-    if (mountain[at]<3){return false}
+const triplet = (mountain, at, tiles=[]) => {
+    if (mountain[at]<3){return [false,tiles]}
     const result = [...mountain]
     result[at]-=3
-    return result
+    return [result,[...tiles, [at,at,at]]]
 }
 
-const sequence = (mountain, at)=>{
-    if (at>6) return false
+const sequence = (mountain, at, tiles=[])=>{
+    if (at>6) return [false,tiles]
     if (mountain[at]*mountain[at+1]*mountain[at+2]===0){
-        return false
+        return [false, tiles]
     }
     const result = [...mountain]
     result[at]-=1
     result[at+1]-=1
     result[at+2]-=1
-    return result
+    return [result, [...tiles, [at,at+1,at+2]]]
 }
 
-const pair = (mountain)=>{
-    return mountain.filter(item=>item===2).length===1 && mountain.filter(item=>item===0).length===8
+const pair = (mountain, tiles)=>{
+    if (mountain.filter(item=>item===2).length===1 && mountain.filter(item=>item===0).length===8){
+        const id = mountain.indexOf(2)
+        return [true,[...tiles,[id,id]]]
+    }
+    return [false,tiles]
 }

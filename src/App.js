@@ -5,12 +5,15 @@ import {Tiles} from "./consts";
 import Vertical13 from "./Vertical13";
 import Lined13 from "./Lined13";
 import Answer9 from "./Answer9";
+import Result from "./Result";
 
 const dftArray = ()=>Array(9).fill(0)
 const colorList = ["m","p","s"]
 const App = ()=>{
     const [tiles,setTiles] = useState(()=>generate());
     const [draw,setDraw] = useState([]);
+    const [originalDraw,setOriginalDraw] = useState([]);
+    const [solutionTiles,setSolutionTiles] = useState([]);
     const [selected, setSelected] = useState(dftArray())
     const [fontSize, setFontSize] = useState(parseFloat(window.localStorage.getItem("fontSize"))??1)
     const [chooseColorIndex,setChooseColorIndex] = useState(0)
@@ -60,13 +63,15 @@ const App = ()=>{
         setSelected(dftArray())
         while (true){
             const candidate = generate()
-            const solution = drawTiles(candidate)
+            const [solution,solutionTiles] = drawTiles(candidate)
             if (solution.length>=minDraw){
                 const enabledIndex = color.map((enabled,index)=>enabled?index:null).filter(item=>item!==null)
                 setChooseColorIndex(enabledIndex[Math.floor(Math.random()*enabledIndex.length)])
                 setTiles(candidate)
+                setOriginalDraw(solution)
                 const result = dftArray()
                 solution.forEach(item=>result[item]+=1)
+                setSolutionTiles(solutionTiles)
                 setDraw(result)
                 return
             }
@@ -80,13 +85,12 @@ const App = ()=>{
         setColor([...update])
     }
 
-    const usedColor = colorList[chooseColorIndex]
-
+    const tileSet = Tiles[colorList[chooseColorIndex]]
     return <div style={{width:"100%"}}>
         <div style={{margin:"0 16px"}}>
-            <div style={{width:"100%", display:"grid", gridTemplateColumns:"1fr auto"}}>
+            <div style={{width:"100%",}}>
 
-                <div style={{textAlign:"center",display:"flex", gap:"16px"}} >
+                <div style={{textAlign:"center",display:"flex", gap:"16px", flexWrap:"wrap"}} >
                     <div>
                         <div>Font Size</div>
                         <input type="range" value={fontSize} min={1} max={10} step={0.01} onChange={
@@ -98,7 +102,7 @@ const App = ()=>{
                     </div>
                     <div>
                         {colorList.map((item,index)=>
-                            <div key={index} style={{display:"inline-block"}}>
+                            <div key={index} style={{display:"inline-block",margin:"0 4px"}}>
                                 <div>{item}</div>
                                 <div><input
                                     disabled={color?.[index]&&color.filter(item=>item).length===1}
@@ -114,7 +118,10 @@ const App = ()=>{
                     <div>
                         <div>Min Draw</div>
                         <div>
-                            <input type="number" value={minDraw} min={0} max={9} onChange={(e)=>setMinDraw(parseInt(e.target.value))}/>
+                            <button disabled={minDraw<=0} onClick={()=>setMinDraw(minDraw=>minDraw-1)}>-</button>
+                            <span style={{margin:"0 4px"}}>{minDraw}</span>
+                            <button disabled={minDraw>=9} onClick={()=>setMinDraw(minDraw=>minDraw+1)}>+</button>
+
                         </div>
                     </div>
                     <div>
@@ -133,9 +140,9 @@ const App = ()=>{
                         </div>
                     </div>
 
-                </div>
-                <div>
-                    <span style={{fontSize:"2rem",fontFamily:"sans-serif"}}>这能听个啥</span>
+                    <div style={{marginLeft:"auto"}}>
+                        <span style={{fontSize:"2rem",fontFamily:"sans-serif"}}>这能听个啥</span>
+                    </div>
                 </div>
             </div>
 
@@ -143,8 +150,8 @@ const App = ()=>{
         <div style={{textAlign:"center"}}>
             <div style={{fontSize:`${fontSize}rem`}}>
                 <div>
-                    {vertical?<Vertical13 data={tiles} tileSet={Tiles[colorList[chooseColorIndex]]} />:
-                        <Lined13 data={tiles} tileSet={Tiles[colorList[chooseColorIndex]]} />}
+                    {vertical?<Vertical13 data={tiles} tileSet={tileSet} />:
+                        <Lined13 data={tiles} tileSet={tileSet} />}
                 </div>
                 <div style={{border:"3px gray dashed"}}>
                     <Answer9 tileSet={Tiles[colorList[chooseColorIndex]]} enabled={true} answer={((answerMode&&showAnswer)||!answerMode)?draw:Array(9).fill(1)} selected={answerMode?selected:dftArray()} onClick={(index)=>{
@@ -160,7 +167,9 @@ const App = ()=>{
                         {!answerMode||(answerMode&&showAnswer)?<span>redo</span>:<span>check answer</span>}
                     </button>
                 </div>
-
+                {(!answerMode||(answerMode&&showAnswer))&&<div>
+                    {solutionTiles.map((s, index) => <Result data={s} tileSet={tileSet} draw={originalDraw[index]}/>)}
+                </div>}
             </div>
         </div>
     </div>
