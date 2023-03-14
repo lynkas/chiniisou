@@ -69,6 +69,7 @@ const App = () => {
       const candidate = generate();
 
       const [solution, solutionTiles] = drawTiles(candidate);
+
       if (solution.length >= minDraw) {
         const enabledIndex = color
           .map((enabled, index) => (enabled ? index : null))

@@ -10,9 +10,9 @@ export default ({ data, tileSet, draw }) => {
             {tri.map((item, index) => (
               <span
                 key={item + index}
-                style={draw === index ? { color: "deeppink" } : {}}
+                style={draw === item ? { color: "deeppink" } : {}}
               >
-                {tileSet[index]}
+                {tileSet[item]}
               </span>
             ))}
           </div>
