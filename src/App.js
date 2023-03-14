@@ -43,7 +43,6 @@ const App = () => {
         (e.code.startsWith("Numpad") || e.code.startsWith("Digit")) &&
         "123456789".includes(last)
       ) {
-        // setSelected(Array(9).fill(1))
         setSelected((a) => {
           const newA = [...a];
           newA[parseInt(last) - 1] = !newA[parseInt(last) - 1];
